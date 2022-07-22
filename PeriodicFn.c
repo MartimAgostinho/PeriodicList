@@ -1,5 +1,7 @@
+//#include <bits/pthreadtypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "PeriodicFn.h"
 
@@ -37,7 +39,7 @@ void del_linked_fn(linked_fn lkfn){
     }while( prn_aux != lkfn.head );
 }
 
-void add_fn(linked_fn *lkfn,void (* fn)(void **),void ** args,unsigned long int min,unsigned int id){
+void add_fn(linked_fn *lkfn,void *(* fn)(void *),void * args,unsigned long int min,unsigned int id){
 
     fn_node * fn_new = (fn_node * ) malloc( sizeof(fn_node) );
     
@@ -154,23 +156,23 @@ void rm_fn(linked_fn * lkfn,unsigned int id){//remove a primeira funcao com o id
                     free( prn_aux );
                     prn_aux = prn_prev;
                     do{//fix time
-                    
+
                         prn_aux->time += min;
                         prn_aux = prn_aux->next;
                     }while( prn_aux != lkfn->head );
                     
                     return;
                 }
-               
+
                 if( prn_aux->head_fn == fn_aux ){//change head fn
 
                     prn_aux->head_fn = fn_aux->next_fn;
-                
+
                 }else{
                     
                     fn_prev->next_fn = fn_aux->next_fn;
                 }
-    
+                    
                 free(fn_aux);
                 return;
             }
@@ -184,15 +186,20 @@ void rm_fn(linked_fn * lkfn,unsigned int id){//remove a primeira funcao com o id
 }
 
 void exec_node(periodic_node *node){//use threads in the future 
-
+    
+    if(node->head_fn == NULL){ return; }
+    
+    pthread_t tid;
     fn_node *fn_aux = node->head_fn;
+    void * ret = NULL;
 
     while( fn_aux != NULL ){
-
-        fn_aux->fn_ptr(fn_aux->args);
+        
+        pthread_create(&tid, ret , fn_aux->fn_ptr , fn_aux->args);
+       // fn_aux->fn_ptr(fn_aux->args);
         fn_aux = fn_aux->next_fn;
     }
-
+    pthread_join(tid, ret);
 }
 
 void start_fn(linked_fn lkfn);
