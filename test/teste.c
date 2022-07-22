@@ -16,17 +16,26 @@ void fn3(char *str1,char *str2){
     printf("//THIS IS FN 3str1:%s\nstr2:%s//\n`",str1,str2);
 }
 
-void fn1gen(void **args){
+void * fn1gen(void * argadd){
 
+    void ** args = argadd;
+    
     fn1(args[0]);
+    return NULL;
 }
-void fn2gen(void **args){
+void * fn2gen(void * argadd){
 
+    void ** args = argadd;
+    
     fn2(args[0],args[1]);
+    return NULL;
 }
-void fn3gen(void **args){
+void * fn3gen(void * argadd){
+
+    void ** args = argadd;
 
     fn3(args[0],args[1]);
+    return NULL;
 }
 
 int main(void){
