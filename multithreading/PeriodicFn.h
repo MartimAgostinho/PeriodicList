@@ -9,8 +9,8 @@ typedef struct fn_node fn_node ;
 typedef struct periodic_node periodic_node;
 
 struct fn_node{
-    void         (* fn_ptr )(void **);//function
-    void    **   args;               //function args
+    void    *    (* fn_ptr )(void *); //function
+    void    *    args;               //function args
     fn_node *    next_fn;           //next node
     unsigned int id;               //function id( not needed )
 };
@@ -32,7 +32,11 @@ typedef struct{
 //********************structs********************//
 
 linked_fn make_linked_fn();
-void add_fn(linked_fn * lkfn,void (* fn)(void **),void ** args,unsigned long int min,unsigned int id );
+void add_fn(linked_fn *lkfn,
+        void *(* fn)(void *),
+        void * args,
+        unsigned long int min,
+        unsigned int id);
 void start_fn(linked_fn lkfn);
 void del_linked_fn(linked_fn lkfn);
 periodic_node * create_periodic_node(periodic_node * next_prn);

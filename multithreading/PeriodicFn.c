@@ -1,5 +1,7 @@
+//#include <bits/pthreadtypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
 
 #include "PeriodicFn.h"
 
@@ -19,9 +21,9 @@ void del_linked_fn(linked_fn lkfn){
     periodic_node * prn_nxt = NULL;
     fn_node       * fn_aux = prn_aux->head_fn;
     fn_node       * fn_nxt;
-
+    
     do{
-
+        
         //delete fn_nodes
         while( fn_aux != NULL ){
 
@@ -29,7 +31,7 @@ void del_linked_fn(linked_fn lkfn){
             free(fn_aux);
             fn_aux = fn_nxt;
         }
-
+        
         prn_nxt = prn_aux->next;
         free(prn_aux);
         prn_aux = prn_nxt;
@@ -37,10 +39,10 @@ void del_linked_fn(linked_fn lkfn){
     }while( prn_aux != lkfn.head );
 }
 
-void add_fn(linked_fn *lkfn,void (* fn)(void **),void ** args,unsigned long int min,unsigned int id){
+void add_fn(linked_fn *lkfn,void *(* fn)(void *),void * args,unsigned long int min,unsigned int id){
 
     fn_node * fn_new = (fn_node * ) malloc( sizeof(fn_node) );
-
+    
     if ( fn_new == NULL ){ return; }
 
     fn_new->next_fn  = NULL;
@@ -56,14 +58,14 @@ void add_fn(linked_fn *lkfn,void (* fn)(void **),void ** args,unsigned long int 
         lkfn->tail = ( periodic_node * )(malloc( sizeof(periodic_node) ));
 
         if ( lkfn->head == NULL ){ return; }
-
+        
         lkfn->head->head_fn  = fn_new;
         lkfn->head->time     = min;
         lkfn->tail->time     = DAYMIN - min; //time till midnight
         lkfn->tail->head_fn  = 0;           //NULL node
         lkfn->tail->next     = lkfn->head; //loop
         lkfn->head->next     = lkfn->tail;//loop
-
+        
         return;
     }
 
@@ -73,7 +75,7 @@ void add_fn(linked_fn *lkfn,void (* fn)(void **),void ** args,unsigned long int 
     if ( min >= min_aux ){//if its not the head
 
         while (min > min_aux){//get the relative time, prev node and nxt node
-
+            
             min      -= min_aux;
             prn_prev =  prn_aux;
             prn_aux  =  prn_aux->next;
@@ -81,7 +83,7 @@ void add_fn(linked_fn *lkfn,void (* fn)(void **),void ** args,unsigned long int 
         }
 
         if ( min == min_aux ){// if node already exists 
-
+            
             fn_node * fn_aux = prn_aux->head_fn;
             prn_aux->head_fn = fn_new;
             fn_new->next_fn  = fn_aux;
@@ -89,7 +91,7 @@ void add_fn(linked_fn *lkfn,void (* fn)(void **),void ** args,unsigned long int 
         }
         periodic_node * prn_new = ( periodic_node * )malloc(sizeof(periodic_node));
         if ( prn_new == NULL ){ return; }
-
+        
         //create new node 
         prn_new->head_fn = fn_new;
         prn_new->next    = prn_aux;
@@ -113,7 +115,7 @@ void add_fn(linked_fn *lkfn,void (* fn)(void **),void ** args,unsigned long int 
     prn_new->next    = prn_aux;
     prn_new->time    = min;
     prn_prev->next   = prn_new;
-
+    
     do{//update relative times
         prn_aux->time -= min;
         prn_aux       =  prn_aux->next;
@@ -130,20 +132,20 @@ void rm_fn(linked_fn * lkfn,unsigned int id){//remove a primeira funcao com o id
     fn_node       * fn_aux;
 
     while (prn_aux != lkfn->tail) {
-
+        
         fn_aux = prn_aux->head_fn;
-
+        
         while (fn_aux != NULL) {
-
+            
             if ( fn_aux->id == id ) {
 
                 if ( prn_aux->head_fn == fn_aux && fn_aux->next_fn == NULL) {//if its de only fn on the node
-
+                    
                     unsigned long int min = prn_aux->time;
                     free(fn_aux);
 
                     if ( prn_prev == lkfn->tail) {//if its the head
-
+                        
                         lkfn->tail->next = prn_aux->next;//next from head node
                         lkfn->head       = lkfn->tail->next;
                     }else{
@@ -158,7 +160,7 @@ void rm_fn(linked_fn * lkfn,unsigned int id){//remove a primeira funcao com o id
                         prn_aux->time += min;
                         prn_aux = prn_aux->next;
                     }while( prn_aux != lkfn->head );
-
+                    
                     return;
                 }
 
@@ -167,10 +169,10 @@ void rm_fn(linked_fn * lkfn,unsigned int id){//remove a primeira funcao com o id
                     prn_aux->head_fn = fn_aux->next_fn;
 
                 }else{
-
+                    
                     fn_prev->next_fn = fn_aux->next_fn;
                 }
-
+                    
                 free(fn_aux);
                 return;
             }
@@ -184,15 +186,20 @@ void rm_fn(linked_fn * lkfn,unsigned int id){//remove a primeira funcao com o id
 }
 
 void exec_node(periodic_node *node){//use threads in the future 
-
+    
+    if(node->head_fn == NULL){ return; }
+    
+    pthread_t tid;
     fn_node *fn_aux = node->head_fn;
+    void * ret = NULL;
 
     while( fn_aux != NULL ){
-
-        fn_aux->fn_ptr(fn_aux->args);
+        
+        pthread_create(&tid, ret , fn_aux->fn_ptr , fn_aux->args);
+       // fn_aux->fn_ptr(fn_aux->args);
         fn_aux = fn_aux->next_fn;
     }
-
+    pthread_join(tid, ret);
 }
 
 void start_fn(linked_fn lkfn);
@@ -204,6 +211,6 @@ periodic_node * create_periodic_node(periodic_node * next_prn){
     prn->head_fn    = NULL;
     prn->next       = next_prn;
     prn->time       = 0;
-
+    
     return prn;
 }
