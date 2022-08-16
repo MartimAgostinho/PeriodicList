@@ -57,7 +57,7 @@ void add_fn(linked_fn *lkfn,void *(* fn)(void *),void * args,unsigned long int m
         lkfn->head = ( periodic_node * )(malloc( sizeof(periodic_node) ));
         lkfn->tail = ( periodic_node * )(malloc( sizeof(periodic_node) ));
 
-        if ( lkfn->head == NULL ){ return; }
+        if ( lkfn->head == NULL || lkfn->tail == NULL ){ return; }
         
         lkfn->head->head_fn  = fn_new;
         lkfn->head->time     = min;
